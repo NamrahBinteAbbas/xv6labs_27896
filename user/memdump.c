@@ -60,6 +60,64 @@ main(int argc, char *argv[])
 void
 memdump(char *fmt, char *data)
 {
-  // Your code here.
+  char *p = data;
+
+  for (; *fmt; fmt++) {
+    char f = *fmt;
+    switch (f) {
+    case 'i': {
+      int v = ((unsigned char)p[0]) | ((unsigned char)p[1] << 8) |
+              ((unsigned char)p[2] << 16) | ((unsigned char)p[3] << 24);
+      printf("%d ", v);
+      p += 4;
+      break;
+    }
+    case 'p': {
+      unsigned long v = 0;
+      for (int i = 0; i < 8; i++)
+        v |= ((unsigned long)(unsigned char)p[i]) << (8 * i);
+
+      printf("0x%lx ", v);
+      p += 8;
+      break;
+    }
+    case 'h': {
+      short v = ((unsigned char)p[0]) | ((unsigned char)p[1] << 8);
+      printf("%d ", v);
+      p += 2;
+      break;
+    }
+    case 'c': {
+      char ch = *p;
+      if (ch >= 32 && ch <= 126)
+        printf("%c ", ch);
+      else
+        printf("? ");
+      p += 1;
+      break;
+    }
+    case 's': {
+      unsigned long ptr = 0;
+      for (int i = 0; i < 8; i++)
+        ptr |= ((unsigned long)(unsigned char)p[i]) << (8 * i);
+      char *sp = (char *)ptr;
+      if (sp)
+        printf("%s ", sp);
+      else
+        printf("(null) ");
+      p += 8;
+      break;
+    }
+    case 'S': {
+      printf("%s ", p);
+      p += strlen(p) + 1;
+      break;
+    }
+    default:
+      printf("[?%c?] ", f);
+      break;
+    }
+  }
+  printf("\n");
 
 }
