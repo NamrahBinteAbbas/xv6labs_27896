@@ -24,7 +24,11 @@ int getpid(void);
 char* sys_sbrk(int,int);
 int pause(int);
 int uptime(void);
+<<<<<<< HEAD
 int sleep(int);
+=======
+int interpose(int, char*);
+>>>>>>> pset2
 
 // ulib.c
 int stat(const char*, struct stat*);

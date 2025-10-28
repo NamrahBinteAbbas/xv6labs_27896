@@ -42,4 +42,8 @@ entry("getpid");
 entry("sbrk");
 entry("pause");
 entry("uptime");
+<<<<<<< HEAD
 entry("sleep");
+=======
+entry("interpose");
+>>>>>>> pset2

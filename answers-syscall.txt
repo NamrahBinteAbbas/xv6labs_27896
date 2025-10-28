@@ -1,0 +1,20 @@
+1) Looking at the backtrace output, which function called syscall?
+Answer: usertrap()
+
+2) What is the value of p->trapframe->a7 and what does that value represent?
+Answer: 0xa = 10 — this is the syscall number (a7 holds the syscall number).
+
+3) What was the previous mode that the CPU was in?
+Answer: sstatus = 0x200000022 — previous mode = user mode.
+
+4) Write down the assembly instruction the kernel is panicing at.
+Answer: 80001c7c:   00002683                lw      a3,0(zero)   # 0 <_entry-0x80000000>
+
+5) Which register corresponds to the variable num?
+Answer: a3 — the kernel attempted to load into a3 (so num is in register a3 in this faulting context).
+
+6) Why does the kernel crash?
+Answer: The kernel tried to load from address 0 which is not mapped in the kernel address space. The `lw a3,0(zero)` dereferenced address 0 and triggered a load page fault.
+
+7) What process was running when the kernel panicked and what is its pid?
+Answer: process name = "init", pid = 1

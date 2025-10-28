@@ -20,4 +20,8 @@
 #define SYS_link   19
 #define SYS_mkdir  20
 #define SYS_close  21
+<<<<<<< HEAD
 #define SYS_sleep  22
+=======
+#define SYS_interpose  22
+>>>>>>> pset2

@@ -1,11 +1,32 @@
+// kernel/sysproc.c
 #include "types.h"
 #include "riscv.h"
 #include "defs.h"
+#include "date.h"
 #include "param.h"
 #include "memlayout.h"
 #include "spinlock.h"
 #include "proc.h"
-#include "vm.h"
+#include "syscall.h"
+#define SBRK_EAGER 0
+
+uint64
+sys_interpose(void)
+{
+  int mask;
+  char path[128];
+
+  argint(0, &mask);
+
+  if(argstr(1, path, 128) < 0)
+    return -1;
+
+  // Record the mask in the current process
+  myproc()->interpose_mask = (uint64)mask;
+  // We don't need to use path here for this lab (it's for the next assignment)
+  memmove(myproc()->interpose_path, path, MAXPATH);
+  return 0;
+}
 
 uint64
 sys_exit(void)

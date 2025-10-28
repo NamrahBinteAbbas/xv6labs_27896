@@ -195,11 +195,26 @@ UPROGS=\
 	$U/_logstress\
 	$U/_forphan\
 	$U/_dorphan\
+<<<<<<< HEAD
 	$U/_sleep\
 	$U/_sixfive\
 	$U/_find\
 
 
+=======
+	$U/_sandbox\
+	$U/_attack\
+
+
+ifeq ($(LAB),util)
+UPROGS += \
+	$U/_sleep\
+	$U/_sixfive\
+	$U/_find
+endif
+### ENDIF
+
+>>>>>>> pset2
 
 ifeq ($(LAB),syscall)
 UPROGS += \
@@ -279,7 +294,13 @@ ifeq ($(LAB),util)
 	UEXTRA += user/sixfive.txt
 	UPROGS += $U/_memdump
 endif
+<<<<<<< HEAD
 
+=======
+ifeq ($(LAB),syscall)
+	UEXTRA += user/exec.sh
+endif
+>>>>>>> pset2
 
 fs.img: mkfs/mkfs README $(UEXTRA) $(UPROGS)
 	mkfs/mkfs fs.img README $(UEXTRA) $(UPROGS)
