@@ -93,7 +93,7 @@ struct proc {
   int pid;                     // Process ID
 
   // wait_lock must be held when using this:
-  struct proc *parent;         // Parent process
+  struct proc *parent;
 
   // these are private to the process, so p->lock need not be held.
   uint64 kstack;               // Virtual address of kernel stack
@@ -103,5 +103,9 @@ struct proc {
   struct context context;      // swtch() here to run process
   struct file *ofile[NOFILE];  // Open files
   struct inode *cwd;           // Current directory
-  char name[16];               // Process name (debugging)
+  char name[16]; 
+
+  uint interpose_mask;            // Process name (debugging)
+  char interpose_path[MAXPATH]; // Path allowed for open/exec
+
 };

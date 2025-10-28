@@ -101,6 +101,7 @@ extern uint64 sys_unlink(void);
 extern uint64 sys_link(void);
 extern uint64 sys_mkdir(void);
 extern uint64 sys_close(void);
+extern uint64 sys_interpose(void);
 
 // An array mapping syscall numbers from syscall.h
 // to the function that handles the system call.
@@ -126,8 +127,8 @@ static uint64 (*syscalls[])(void) = {
 [SYS_link]    sys_link,
 [SYS_mkdir]   sys_mkdir,
 [SYS_close]   sys_close,
+[SYS_interpose]  sys_interpose,
 };
-
 void
 syscall(void)
 {
@@ -135,13 +136,34 @@ syscall(void)
   struct proc *p = myproc();
 
   num = p->trapframe->a7;
-  if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {
-    // Use num to lookup the system call function for num, call it,
-    // and store its return value in p->trapframe->a0
+  if (num > 0 && num < NELEM(syscalls) && syscalls[num]) {
+    if (p->interpose_mask & (1 << num)) {
+      // Special handling for open and exec
+      if (num == SYS_open || num == SYS_exec) {
+        char path[MAXPATH];
+        if (argstr(0, path, MAXPATH) >= 0) {
+          // If allowed path matches, allow it
+          if (strncmp(p->interpose_path, "-", MAXPATH) != 0 &&
+              strncmp(p->interpose_path, path, MAXPATH) == 0) {
+            // allowed -> continue to actual syscall
+          } else {
+            // Block open/exec with disallowed path
+            p->trapframe->a0 = -1;
+            return;
+          }
+        }
+      } else {
+        // Block all other syscalls in mask
+        p->trapframe->a0 = -1;
+        return;
+      }
+    }
+
+    // Call the real syscall if not blocked
     p->trapframe->a0 = syscalls[num]();
   } else {
     printf("%d %s: unknown sys call %d\n",
-            p->pid, p->name, num);
+           p->pid, p->name, num);
     p->trapframe->a0 = -1;
   }
 }
