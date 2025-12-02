@@ -4,12 +4,6 @@
 #include "user/user.h"
 #include "kernel/fcntl.h"
 
-int strncmp(const char *p, const char *q, uint n);
-// history globals
-#define HISTORY_SIZE 16
-static char history[HISTORY_SIZE][128];  // 128 = max command length
-static int history_count = 0;
-
 // Parsed command representation
 #define EXEC  1
 #define REDIR 2
@@ -140,35 +134,25 @@ runcmd(struct cmd *cmd)
 int
 getcmd(char *buf, int nbuf)
 {
-  // always show prompt
-  write(2, "$ ", 2);
-
+  write(2, "Na$ ", 2);
   memset(buf, 0, nbuf);
   gets(buf, nbuf);
-  if (buf[0] == 0) // EOF
+  if(buf[0] == 0) // EOF
     return -1;
-
-  // detect tab key
-  if (strchr(buf, '\t')) {
-    printf("Tab pressed\n");
-  }
-
-  // store in history if non-empty
-  if (buf[0] != '\n' && buf[0] != '\0') {
-    int idx = history_count % HISTORY_SIZE;
-    strcpy(history[idx], buf);
-    history_count++;
-  }
-
   return 0;
 }
-
 
 int
 main(void)
 {
   static char buf[100];
   int fd;
+
+struct stat st;
+int interactive = 0;
+if (fstat(0, &st) == 0 && st.type == T_DEVICE) {
+  interactive = 1;   // stdin is a terminal/device -> print prompt
+}
 
   // Ensure that three file descriptors are open.
   while((fd = open("console", O_RDWR)) >= 0){
@@ -183,64 +167,17 @@ main(void)
     char *cmd = buf;
     while (*cmd == ' ' || *cmd == '\t')
       cmd++;
-    if (*cmd == '\n') // blank command
+    if (*cmd == '\n') // is a blank command
       continue;
-
-    // -------- builtins --------
     if(cmd[0] == 'c' && cmd[1] == 'd' && cmd[2] == ' '){
+      // Chdir must be called by the parent, not the child.
       cmd[strlen(cmd)-1] = 0;  // chop \n
       if(chdir(cmd+3) < 0)
         fprintf(2, "cannot cd %s\n", cmd+3);
-
-    } else if(strncmp(cmd, "wait", 4) == 0 &&
-              (cmd[4] == '\0' || cmd[4] == '\n' || cmd[4] == ' ')) {
-      wait(0);
-
-    } else if (strcmp(cmd, "history\n") == 0 || strcmp(cmd, "history") == 0) {
-      int start = history_count > HISTORY_SIZE ? history_count - HISTORY_SIZE : 0;
-      for (int i = start; i < history_count; i++) {
-        printf("%d: %s", i+1, history[i % HISTORY_SIZE]);
-      }
-      continue;   // don’t fork
-
     } else {
       if(fork1() == 0)
         runcmd(parsecmd(cmd));
-      wait(0);
-    }
-    // -------- builtins end --------
-  }
-  exit(0);
-}
-
-void
-panic(char *s)
-{
-  fprintf(2, "%s\n", s);
-  exit(1);
-}
-
-int
-fork1(void)
-{
-  int pid;
-
-  pid = fork();
-  if(pid == -1)
-    panic("fork");
-  return pid;
-}
-
-//PAGEBREAK!
-// Constructors
-
-struct cmd*
-execcmd(void)
-{
-  struct execcmd *cmd;
-
-  cmd = malloc(sizeof(*cmd));
-  memset(cmd, 0, sizeof(*cmd));
+ 0, sizeof(*cmd));
   cmd->type = EXEC;
   return (struct cmd*)cmd;
 }
@@ -298,7 +235,6 @@ backcmd(struct cmd *subcmd)
   cmd->cmd = subcmd;
   return (struct cmd*)cmd;
 }
-
 //PAGEBREAK!
 // Parsing
 
@@ -375,6 +311,7 @@ parsecmd(char *s)
 
   es = s + strlen(s);
   cmd = parseline(&s, es);
+  peek(&s, es, "");
   if(s != es){
     fprintf(2, "leftovers: %s\n", s);
     panic("syntax");
@@ -533,4 +470,3 @@ nulterminate(struct cmd *cmd)
   }
   return cmd;
 }
-

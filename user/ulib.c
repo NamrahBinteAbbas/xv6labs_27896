@@ -158,3 +158,24 @@ sbrklazy(int n) {
   return sys_sbrk(n, SBRK_LAZY);
 }
 
+char*
+safestrcpy(char *dst, const char *src, int n)
+{
+  char *d = dst;
+  if (n <= 0)
+    return dst;
+  while (--n > 0 && (*d++ = *src++) != 0)
+    ;
+  *d = 0;
+  return dst;
+}
+int
+strncmp(const char *p, const char *q, uint n)
+{
+  while(n > 0 && *p && *p == *q){
+    n--, p++, q++;
+  }
+  if(n == 0)
+    return 0;
+  return (uchar)*p - (uchar)*q;
+}
